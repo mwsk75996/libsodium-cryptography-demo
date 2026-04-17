@@ -13,6 +13,9 @@ void init_sodium();
 
 std::string bytes_to_hex(const unsigned char* data, std::size_t size);
 std::string bytes_to_hex(const std::vector<unsigned char>& data);
+std::vector<unsigned char> hex_to_bytes(const std::string& hex);
+std::string generic_hash_hex(const std::string& value);
+bool constant_time_equal_hex(const std::string& left, const std::string& right);
 
 std::vector<unsigned char> random_bytes(std::size_t size);
 

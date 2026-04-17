@@ -24,6 +24,50 @@ std::string bytes_to_hex(const std::vector<unsigned char>& data) {
     return bytes_to_hex(data.data(), data.size());
 }
 
+std::vector<unsigned char> hex_to_bytes(const std::string& hex) {
+    if (hex.size() % 2 != 0) {
+        throw std::runtime_error("Hex string har ulige laengde");
+    }
+
+    std::vector<unsigned char> bytes(hex.size() / 2);
+    std::size_t bin_len = 0;
+    if (sodium_hex2bin(
+            bytes.data(),
+            bytes.size(),
+            hex.c_str(),
+            hex.size(),
+            nullptr,
+            &bin_len,
+            nullptr) != 0) {
+        throw std::runtime_error("Ugyldig hex string");
+    }
+
+    bytes.resize(bin_len);
+    return bytes;
+}
+
+std::string generic_hash_hex(const std::string& value) {
+    std::array<unsigned char, crypto_generichash_BYTES> hash{};
+    crypto_generichash(
+        hash.data(),
+        hash.size(),
+        reinterpret_cast<const unsigned char*>(value.data()),
+        value.size(),
+        nullptr,
+        0);
+    return bytes_to_hex(hash.data(), hash.size());
+}
+
+bool constant_time_equal_hex(const std::string& left, const std::string& right) {
+    const auto left_bytes = hex_to_bytes(left);
+    const auto right_bytes = hex_to_bytes(right);
+    if (left_bytes.size() != right_bytes.size()) {
+        return false;
+    }
+
+    return sodium_memcmp(left_bytes.data(), right_bytes.data(), left_bytes.size()) == 0;
+}
+
 std::vector<unsigned char> random_bytes(const std::size_t size) {
     std::vector<unsigned char> bytes(size);
     randombytes_buf(bytes.data(), bytes.size());

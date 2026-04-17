@@ -2,16 +2,22 @@
 
 Dette projekt indeholder små C++ eksempler til opgaverne i `6-cryptography.md`.
 
+Se også `CHAP-flow.md` for designet af de fire CHAP packets og forskellen på PAP og CHAP.
+
 ## Programmer
 
 - `password_server`: opretter en password-hash med libsodium og gemmer den i `data/password_hash.txt`.
 - `password_client`: læser password fra terminalen og verificerer det mod den gemte hash.
 - `chap_demo`: viser en CHAP-lignende transaktion med fire packets.
 - `encrypt_mac`: krypterer og dekrypterer en MAC-adresse med både symmetrisk og asymmetrisk kryptering.
+- `mqtt_hash_server`: subscriber på MQTT og validerer en hash sendt fra klienten.
+- `mqtt_hash_client`: beregner en hash af brugerens password og sender den over MQTT.
+- `mqtt_chap_server`: kører CHAP challenge-response over MQTT.
+- `mqtt_chap_client`: svarer på serverens CHAP challenge over MQTT.
 
-## Installation af libsodium
+## Installation
 
-Installér først libsodium. Vælg den metode der passer til dit system.
+Installér først libsodium og Mosquitto/libmosquitto. Vælg den metode der passer til dit system.
 
 ### Windows med vcpkg
 
@@ -20,7 +26,7 @@ Denne vej passer godt hvis du bruger Visual Studio eller Visual Studio Build Too
 ```powershell
 git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 C:\vcpkg\bootstrap-vcpkg.bat
-C:\vcpkg\vcpkg.exe install libsodium:x64-windows
+C:\vcpkg\vcpkg.exe install libsodium:x64-windows mosquitto:x64-windows
 ```
 
 Byg derefter med vcpkg toolchain-filen:
@@ -34,7 +40,7 @@ cmake --build build
 
 ```bash
 sudo apt update
-sudo apt install build-essential cmake pkg-config libsodium-dev
+sudo apt install build-essential cmake pkg-config libsodium-dev libmosquitto-dev mosquitto
 ```
 
 Byg derefter:
@@ -49,7 +55,7 @@ cmake --build build
 Denne vej passer godt hvis du bruger MinGW via MSYS2.
 
 ```bash
-pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-libsodium
+pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-libsodium mingw-w64-ucrt-x86_64-mosquitto
 ```
 
 Byg derefter fra en MSYS2 UCRT64 terminal:
@@ -59,7 +65,7 @@ cmake -S . -B build -G "MinGW Makefiles"
 cmake --build build
 ```
 
-Hvis CMake ikke kan finde libsodium, så kontrollér at du bruger samme terminal/toolchain til både installation og build.
+Hvis CMake ikke kan finde libsodium eller libmosquitto, så kontrollér at du bruger samme terminal/toolchain til både installation og build.
 
 ## Kør eksemplerne
 
@@ -69,6 +75,57 @@ Hvis CMake ikke kan finde libsodium, så kontrollér at du bruger samme terminal
 .\build\chap_demo.exe
 .\build\encrypt_mac.exe
 ```
+
+## Kør MQTT eksemplerne
+
+Start først en lokal MQTT broker. På Ubuntu/Debian kan den ofte startes som service:
+
+```bash
+sudo systemctl start mosquitto
+```
+
+På Windows/MSYS2 kan du starte broker direkte i en terminal:
+
+```bash
+mosquitto -v
+```
+
+### Opgave 3: send hash over MQTT
+
+Terminal 1:
+
+```bash
+./build/mqtt_hash_server
+```
+
+Terminal 2:
+
+```bash
+./build/mqtt_hash_client
+```
+
+Serveren opretter `data/mqtt_password_hash.txt` første gang. Klienten beregner hash af passwordet og sender `brugernavn:hash` til serverens MQTT topic. Serveren validerer hash og svarer `OK` eller `AFVIST`.
+
+### Opgave 4: MQTT + salt/challenge
+
+Terminal 1:
+
+```bash
+./build/mqtt_chap_server
+```
+
+Terminal 2:
+
+```bash
+./build/mqtt_chap_client
+```
+
+Flowet er:
+
+1. Klient sender login request.
+2. Server sender en tilfældig challenge/salt.
+3. Klient sender en response hash baseret på challenge og delt hemmelighed.
+4. Server verificerer response og sender `OK` eller `AFVIST`.
 
 ## Kort refleksion
 
