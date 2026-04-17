@@ -90,6 +90,14 @@ På Windows/MSYS2 kan du starte broker direkte i en terminal:
 mosquitto -v
 ```
 
+Hvis `mosquitto` ikke ligger på din Windows `PATH`, kan du starte den med fuld sti:
+
+```powershell
+C:\msys64\ucrt64\bin\mosquitto.exe -v
+```
+
+Lad broker-terminalen stå åben. Start derefter server og klient i hver sin nye terminal.
+
 ### Opgave 3: send hash over MQTT
 
 Terminal 1:

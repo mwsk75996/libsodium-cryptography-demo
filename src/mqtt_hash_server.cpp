@@ -3,6 +3,8 @@
 #include <mosquitto.h>
 
 #include <algorithm>
+#include <cerrno>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -15,6 +17,18 @@ constexpr const char* HashFile = "data/mqtt_password_hash.txt";
 struct ServerContext {
     std::string stored_hash;
 };
+
+std::string mqtt_connect_error(const int rc) {
+    std::string error = mosquitto_strerror(rc);
+    if (rc == MOSQ_ERR_ERRNO) {
+        error += ": ";
+        error += std::strerror(errno);
+        if (errno == 0) {
+            error += ". Er Mosquitto broker startet paa denne host/port?";
+        }
+    }
+    return error + " (kode " + std::to_string(rc) + ")";
+}
 
 std::string payload_to_string(const mosquitto_message* message) {
     return std::string(
@@ -70,7 +84,7 @@ void on_message(mosquitto* client, void* userdata, const mosquitto_message* mess
 int main(int argc, char* argv[]) {
     try {
         crypto_demo::init_sodium();
-        const std::string host = argc > 1 ? argv[1] : "localhost";
+        const std::string host = argc > 1 ? argv[1] : "127.0.0.1";
         const int port = argc > 2 ? std::stoi(argv[2]) : 1883;
 
         ServerContext context;
@@ -100,7 +114,7 @@ int main(int argc, char* argv[]) {
 
         const int rc = mosquitto_connect(client, host.c_str(), port, 60);
         if (rc != MOSQ_ERR_SUCCESS) {
-            throw std::runtime_error(std::string("MQTT connect fejlede: ") + mosquitto_strerror(rc));
+            throw std::runtime_error(std::string("MQTT connect fejlede: ") + mqtt_connect_error(rc));
         }
 
         std::cout << "Forbundet til MQTT broker " << host << ":" << port << "\n";
