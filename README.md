@@ -9,22 +9,57 @@ Dette projekt indeholder små C++ eksempler til opgaverne i `6-cryptography.md`.
 - `chap_demo`: viser en CHAP-lignende transaktion med fire packets.
 - `encrypt_mac`: krypterer og dekrypterer en MAC-adresse med både symmetrisk og asymmetrisk kryptering.
 
-## Byg projektet
+## Installation af libsodium
 
-Installér først libsodium. På MSYS2 UCRT64 kan det typisk gøres med:
+Installér først libsodium. Vælg den metode der passer til dit system.
+
+### Windows med vcpkg
+
+Denne vej passer godt hvis du bruger Visual Studio eller Visual Studio Build Tools.
 
 ```powershell
-pacman -S mingw-w64-ucrt-x86_64-libsodium
+git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+C:\vcpkg\bootstrap-vcpkg.bat
+C:\vcpkg\vcpkg.exe install libsodium:x64-windows
+```
+
+Byg derefter med vcpkg toolchain-filen:
+
+```powershell
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
+cmake --build build
+```
+
+### Ubuntu/Debian med apt
+
+```bash
+sudo apt update
+sudo apt install build-essential cmake pkg-config libsodium-dev
 ```
 
 Byg derefter:
 
-```powershell
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+### Windows med MSYS2 UCRT64 og pacman
+
+Denne vej passer godt hvis du bruger MinGW via MSYS2.
+
+```bash
+pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-libsodium
+```
+
+Byg derefter fra en MSYS2 UCRT64 terminal:
+
+```bash
 cmake -S . -B build -G "MinGW Makefiles"
 cmake --build build
 ```
 
-Hvis CMake ikke kan finde libsodium, så kør kommandoerne fra en MSYS2 UCRT64 terminal, eller sørg for at `sodium.h` og libsodium-biblioteket ligger på compilerens include/library path.
+Hvis CMake ikke kan finde libsodium, så kontrollér at du bruger samme terminal/toolchain til både installation og build.
 
 ## Kør eksemplerne
 
